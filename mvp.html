@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pack de Contenidos Automáticos Diario - MVP Avanzado</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: 'Roboto', sans-serif; }
+  h1,h2,h3 { font-family: 'Montserrat', sans-serif; }
+</style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+<!-- Hero -->
+<section class="bg-gradient-to-r from-purple-600 to-pink-500 text-white text-center py-16">
+  <h1 class="text-4xl md:text-5xl font-bold mb-4">Genera Contenido Diario Automático</h1>
+  <p class="text-lg md:text-xl">Sube tu imagen y nuestro MVP generará múltiples posts con textos y hashtags distintos listos para publicar.</p>
+</section>
+
+<!-- Formulario MVP -->
+<section class="max-w-4xl mx-auto px-6 py-16 bg-white rounded-xl shadow-md mt-10">
+  <h2 class="text-2xl font-bold mb-6 text-center">Sube tu(s) imagen(es)</h2>
+  <form id="contentForm" class="space-y-6">
+    <div>
+      <label class="block mb-2 font-semibold">Imágenes de tu producto</label>
+      <input type="file" id="imageInput" accept="image/*" multiple class="w-full p-2 border rounded-lg" required>
+    </div>
+    <div>
+      <label class="block mb-2 font-semibold">Descripción breve</label>
+      <input type="text" id="descriptionInput" placeholder="Ej: Nuevo café orgánico recién tostado" class="w-full p-2 border rounded-lg" required>
+    </div>
+    <button type="submit" class="w-full bg-indigo-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-indigo-700 transition">Generar Posts</button>
+  </form>
+</section>
+
+<!-- Vista previa -->
+<section class="max-w-4xl mx-auto px-6 py-16">
+  <h2 class="text-2xl font-bold mb-6 text-center">Vista previa de tus posts</h2>
+  <div id="previewContainer" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <p class="text-gray-500 col-span-full">Aquí aparecerán tus posts generados automáticamente</p>
+  </div>
+</section>
+
+<script>
+const form = document.getElementById('contentForm');
+const imageInput = document.getElementById('imageInput');
+const descriptionInput = document.getElementById('descriptionInput');
+const previewContainer = document.getElementById('previewContainer');
+
+// Función para generar variantes de texto
+function generateTexts(description) {
+  const templates = [
+    `¡Nuevo! ${description} ☕✨ #Promoción #Hoy`,
+    `Descubre ${description} y sorprende a tus clientes #Emprendedores #Marketing`,
+    `${description} ahora disponible 💡 #NegociosLocales #SocialMedia`,
+    `No te pierdas ${description} 🚀 #ContenidoDiario #AhorraTiempo`,
+    `Haz que todos vean ${description} 📲 #PequeñosNegocios #Automatización`
+  ];
+  return templates;
+}
+
+form.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const files = imageInput.files;
+  const description = descriptionInput.value;
+
+  if (files.length === 0) return alert("Selecciona al menos una imagen.");
+
+  previewContainer.innerHTML = '';
+
+  Array.from(files).forEach(file => {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      const img = new Image();
+      img.onload = function() {
+        const texts = generateTexts(description);
+        texts.forEach((text, index) => {
+          // Crear canvas para cada post
+          const canvas = document.createElement('canvas');
+          canvas.width = 400;
+          canvas.height = 400;
+          const ctx = canvas.getContext('2d');
+
+          // Fondo blanco
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0,0,canvas.width,canvas.height);
+
+          // Dibujar imagen
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          // Texto con borde
+          ctx.fillStyle = "#ffffff";
+          ctx.strokeStyle = "#000000";
+          ctx.lineWidth = 3;
+          ctx.font = "bold 18px Montserrat";
+          const textWidth = ctx.measureText(text).width;
+          ctx.strokeText(text, (canvas.width - textWidth)/2, canvas.height - 30);
+          ctx.fillText(text, (canvas.width - textWidth)/2, canvas.height - 30);
+
+          // Crear contenedor visual tipo post
+          const postContainer = document.createElement('div');
+          postContainer.className = "bg-gray-50 p-2 rounded-lg shadow-md flex flex-col items-center";
+          postContainer.appendChild(canvas);
+
+          // Botón de descarga
+          const btn = document.createElement('button');
+          btn.textContent = "Descargar Post";
+          btn.className = "mt-2 bg-yellow-400 text-gray-900 font-semibold px-4 py-2 rounded-lg hover:bg-yellow-500 transition";
+          btn.onclick = function() {
+            const link = document.createElement('a');
+            link.download = `post_${index+1}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+          };
+          postContainer.appendChild(btn);
+
+          previewContainer.appendChild(postContainer);
+        });
+      };
+      img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+});
+</script>
+
+</body>
+</html>
